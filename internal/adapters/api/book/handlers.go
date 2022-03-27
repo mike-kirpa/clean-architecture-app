@@ -1,8 +1,7 @@
-package adapters
+package book
 
 import (
-	"clean-architecture-app/internal/adapters"
-	"clean-architecture-app/internal/book"
+	"clean-architecture-app/internal/adapters/api"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -14,16 +13,15 @@ const (
 )
 
 type handler struct {
-	bookService book.Service
+	bookService Service
 }
 
-// Register implements adapters.Handler
+func NewHandler(service Service) api.Handler {
+	return &handler{bookService: service}
+}
+
 func (h *handler) Register(router *httprouter.Router) {
 	router.GET(booksURL, h.GetAllBook)
-}
-
-func NewHandler(service book.Service) adapters.Handler {
-	return &handler{bookService: service}
 }
 
 func (h *handler) GetAllBook(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
