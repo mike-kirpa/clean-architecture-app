@@ -2,13 +2,18 @@ package author
 
 import (
 	"clean-architecture-app/internal/domain/author"
+
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type authorStorage struct {
+	db *mongo.Database
 }
 
-func NewStorage() author.Storage {
-	return &authorStorage{}
+func NewStorage(db *mongo.Database) author.Storage {
+	return &authorStorage{
+		db: db,
+	}
 }
 
 func (as *authorStorage) GetOne(uuid string) *author.Author {

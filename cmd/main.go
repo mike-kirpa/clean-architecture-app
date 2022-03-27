@@ -1,21 +1,43 @@
 package main
 
 import (
-	author3 "clean-architecture-app/internal/adapters/api/author"
-	book3 "clean-architecture-app/internal/adapters/api/book"
-	author2 "clean-architecture-app/internal/adapters/db/author"
-	book2 "clean-architecture-app/internal/adapters/db/book"
-	"clean-architecture-app/internal/domain/author"
-	"clean-architecture-app/internal/domain/book"
+	"clean-architecture-app/internal/composites"
+	"clean-architecture-app/internal/config"
+	"clean-architecture-app/pkg/logging"
+	"context"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
-	bookStorage := book2.NewStorage()
-	bookService := book.NewService(bookStorage)
-	bookHandler := book3.NewHandler(bookService)
+	logging.Init()
+	logger := logging.GetLogger()
 
-	authorStorage := author2.NewStorage()
-	authorService := author.NewService(authorStorage)
-	authorHandler := author3.NewHandler(authorService)
+	logger.Info("config initializing")
+	cfg := config.GetConfig()
 
+	logger.Info("router initializing")
+	router := httprouter.New()
+
+	logger.Info("mongodb composite initializing")
+	mongoDBC, err := composites.NewMongoDBComposite(context.Background(), cfg.MongoDB.Port, cfg.MongoDB.Port, "", "", "", "")
+	if err != nil {
+		logger.Fatal("mongoDB composite failed")
+	}
+
+	logger.Info("author composite initializing")
+	authorComposite, err := composites.NewAuthorComposite(*mongoDBC)
+	if err != nil {
+		logger.Fatal("author composite failed")
+	}
+	authorComposite.Handler.Register(router)
+
+	logger.Info("book composite initializing")
+	bookComposite, err := composites.NewAuthorComposite(*mongoDBC)
+	if err != nil {
+		logger.Fatal("book composite failed")
+	}
+	bookComposite.Handler.Register(router)
+
+	//start
 }
